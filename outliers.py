@@ -1,157 +1,104 @@
-def outliers( DF ) : 
+class Outliers :
     
-    """ Censoring outliers in a numeric dataframe """
+    """ Functions for detection and processing outliers. The input is the whole dataset, and only numeric columns are selected
+    and processed automatically. Extreme values are replaced with threshold values. Based on the 1.5-IQR rule for symmetrical 
+    (normal-like) distributions but modified for skewed (non-negative) distributions where outliers are only one-sided. Works
+    also for very dense distributions (with high predominance of some one or several values).
     
-    import numpy as np
-    
-    import pandas as pd
-    
-    OUT = pd.DataFrame( index=[ 0, 1 ], columns=list( DF ) )
+    Example:
+    MYBOUNDS = Outliers.fit( TRAIN_DATAFRAME )
+    Outliers.transform( TEST_DATAFRAME, MYBOUNDS )
+    """
 
-    for Varname in list( DF ) :
+    def fit( dataframe ) : 
         
-        if DF[ Varname ].nunique() >= 3 and DF[ Varname ].dtype in [ 'float64', 'float32', 'int64', 'int32' ] :
+        """ Produces a dataframe with upper and lower threshold values for censoring outliers """
+        
+        import numpy as np
+    
+        import pandas as pd
+        
+        BOUNDS = pd.DataFrame( index=[ 0, 1 ], columns=list( dataframe ) )
+    
+        for Varname in list( dataframe ) :
             
-            Q1 = DF[ Varname ].quantile( 0.25 )
-            
-            Q2 = DF[ Varname ].quantile( 0.50 )
-  
-            Q3 = DF[ Varname ].quantile( 0.75 )
-            
-            if ( Q2 - Q1 ) != 0 and ( Q3 - Q2 ) != 0 :
+            # Checks if the column is numeric            
+            if dataframe[ Varname ].nunique() >= 3 and dataframe[ Varname ].dtype in [ 'float64', 'float32', 'int64', 'int32' ] :
                 
-                Skewed = ( Q3 - Q2 ) / ( Q2 - Q1 ) >= 1.2 or ( Q2 - Q1 ) / ( Q3 - Q2 ) >= 1.2
+                Q1 = dataframe[ Varname ].quantile( 0.25 )
                 
-            else:
+                Q2 = dataframe[ Varname ].quantile( 0.50 )
+      
+                Q3 = dataframe[ Varname ].quantile( 0.75 )
                 
-                Skewed = True
-            
-            if Skewed and DF[ Varname ].min() >= 0 : 
-                
-                Lower = 0
-                
-                if Q3 > 0 :
-                
-                    Upper = Q3 * 6
+                # Checks if the distribution is very dense
+                if ( Q2 - Q1 ) != 0 and ( Q3 - Q2 ) != 0 :
                     
+                    # Checks if the distribution is non-symmetrical
+                    Skewed = ( Q3 - Q2 ) / ( Q2 - Q1 ) >= 1.2 or ( Q2 - Q1 ) / ( Q3 - Q2 ) >= 1.2
+                    
+                else:
+                    
+                    Skewed = True
+                
+                # Threshold values for a skewed distribution
+                if Skewed and dataframe[ Varname ].min() >= 0 : 
+                    
+                    Lower = 0
+                    
+                    if Q3 > 0 :
+                    
+                        Upper = Q3 * 6
+                        
+                    else :
+                        
+                        Upper = 1
+                
+                # Threshold values for a symmetrical distribution
                 else :
+            
+                    Iqr = Q3 - Q1
                     
-                    Upper = 1
+                    if Iqr > 0 :
                 
-            else :
+                        Lower = Q1 - 1.5 * Iqr
+                    
+                        Upper = Q3 + 1.5 * Iqr
+                        
+                    else :
+                        
+                        Lower = Q1 - 1
+                    
+                        Upper = Q3 + 1
+                
+                BOUNDS.loc[ 1, Varname ] = Lower
+                
+                BOUNDS.loc[ 0, Varname ] = Upper
+                
+        return BOUNDS
+    
+    
+    
+    
+    def transform( dataframe, bounds ) :
         
-                Iqr = Q3 - Q1
-                
-                if Iqr > 0 :
-            
-                    Lower = Q1 - 1.5 * Iqr
-                
-                    Upper = Q3 + 1.5 * Iqr
-                    
-                else :
-                    
-                    Lower = Q1 - 1
-                
-                    Upper = Q3 + 1
-            
-            OUT.loc[ 1, Varname ] = Lower
-            
-            OUT.loc[ 0, Varname ] = Upper
-            
-            Condlow = np.logical_or( DF[ Varname ] > Lower, DF[ Varname ].isnull() )
-            
-            Condup = np.logical_or( DF[ Varname ] < Upper, DF[ Varname ].isnull() )
-            
-            DF[ Varname ].where( Condlow, Lower, inplace=True )
-            
-            DF[ Varname ].where( Condup, Upper, inplace=True )
-            
-    return OUT
-
-
-
-
-def bounds( DF ) : 
-    
-    """ Producing threshold values for censoring outliers """
-    
-    import numpy as np
-    
-    import pandas as pd
-    
-    OUT = pd.DataFrame( index=[ 0, 1 ], columns=list( DF ) )
-
-    for Varname in list( DF ) :
+        """ Applying the threshold values to a dataframe """
         
-        if DF[ Varname ].nunique() >= 3 and DF[ Varname ].dtype in [ 'float64', 'float32', 'int64', 'int32' ] :
-            
-            Q1 = DF[ Varname ].quantile( 0.25 )
-            
-            Q2 = DF[ Varname ].quantile( 0.50 )
-  
-            Q3 = DF[ Varname ].quantile( 0.75 )
-            
-            if ( Q2 - Q1 ) != 0 and ( Q3 - Q2 ) != 0 :
-                
-                Skewed = ( Q3 - Q2 ) / ( Q2 - Q1 ) >= 1.2 or ( Q2 - Q1 ) / ( Q3 - Q2 ) >= 1.2
-                
-            else:
-                
-                Skewed = True
-            
-            if Skewed and DF[ Varname ].min() >= 0 : 
-                
-                Lower = 0
-                
-                if Q3 > 0 :
-                
-                    Upper = Q3 * 6
-                    
-                else :
-                    
-                    Upper = 1
-                
-            else :
+        import numpy as np
+    
+        import pandas as pd
         
-                Iqr = Q3 - Q1
+        for Varname in list( bounds ) :
+            
+            # Checks if the column is numeric
+            if bounds[ Varname ].notnull().all() :
                 
-                if Iqr > 0 :
-            
-                    Lower = Q1 - 1.5 * Iqr
+                # Logical indexes for normal values
+                Condlow = np.logical_or( dataframe[ Varname ] > bounds.loc[ 1, Varname ], dataframe[ Varname ].isnull() )
                 
-                    Upper = Q3 + 1.5 * Iqr
-                    
-                else :
-                    
-                    Lower = Q1 - 1
+                Condup = np.logical_or( dataframe[ Varname ] < bounds.loc[ 0, Varname ], dataframe[ Varname ].isnull() )
                 
-                    Upper = Q3 + 1
-            
-            OUT.loc[ 1, Varname ] = Lower
-            
-            OUT.loc[ 0, Varname ] = Upper
-            
-    return OUT
-
-
-
-
-def censor( DF, IN ) :
-    
-    """ Censoring outliers in a test dataframe """
-    
-    import numpy as np
-    
-    import pandas as pd
-    
-    for Varname in list( IN ) :
-        
-        if DF[ Varname ].nunique() >= 3 and DF[ Varname ].dtype in [ 'float64', 'float32', 'int64', 'int32' ] :
-            
-            Condlow = np.logical_or( DF[ Varname ] > IN.loc[ 1, Varname ], DF[ Varname ].isnull() )
-            
-            Condup = np.logical_or( DF[ Varname ] < IN.loc[ 0, Varname ], DF[ Varname ].isnull() )
-            
-            DF[ Varname ].where( Condlow, IN.loc[ 1, Varname ], inplace=True )
-            
-            DF[ Varname ].where( Condup, IN.loc[ 0, Varname ], inplace=True )
+                # Replacing extreme values (where the logical conditions are false)
+                dataframe[ Varname ].where( Condlow, bounds.loc[ 1, Varname ], inplace=True )
+                
+                dataframe[ Varname ].where( Condup, bounds.loc[ 0, Varname ], inplace=True )
