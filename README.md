@@ -13,3 +13,14 @@ Otherwise, if they are very impalanced, they may have extremely high values (thi
 Accepts the whole numpy array as input and processes only binary variables. The function can not only restore original 0 and 1
 values, but, depending on the distribution, return 0 and -1 or 1 and -1. This allows to keep the mean closer to 0 and the
 standard deviation to 1 (as with truly numeric variables).
+
+## timeseries_to_lags
+A simple and efficient function for transforming a column (which is a timeseries) of a numpy array into a separate array
+where each row is a sequence of lags for a particular observation. This type of transformation is required for preparation of
+timeseries for fitting an LSTM or CNN.
+
+## many_levels
+A function for transforming categorical variables with a huge number of levels (e.g. car model, city, zip ) into numeric
+ones. Based on odds ratio within each level. Applied to binary classification problems. Missing values are treated as a
+separate level. Adds columns (with suffix "_num") to an existing dataframe which are numeric representation of those
+categorical variables.
