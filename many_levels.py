@@ -29,18 +29,23 @@ def many_levels( dataframe, categorical_names, target, conservatism=30 ) :
     
     Positives = dataframe[ target ].sum()
     
+    # Calculates the ratio of positives and negatives in general
     Balance = Positives / ( dataframe.shape[ 0 ] - Positives ) 
 
     for Varname in categorical_names :
     
+        # Assigns a separate level to missing values
         dataframe.loc[ dataframe[ Varname ].isnull(), Varname ] = 'none'
         
+        # Creating a summary dataframe
         LOOKUP = dataframe.groupby( Varname )[ target ].agg([ 'count', 'sum' ])
         
         LOOKUP[ 'negatives' ] = LOOKUP[ 'count' ] - LOOKUP[ 'sum' ]
         
+        # Calculating the numeric values corresponding to each presented level of a variable
         LOOKUP[ 'ratio' ] = ( LOOKUP[ 'sum' ] + conservatism * Balance ) / ( LOOKUP[ 'negatives' ] + conservatism )
         
+        # Assigning corresponding values in a new numeric column of the same dataframe
         dataframe[ Varname + '_num' ] = np.array( LOOKUP.loc[ dataframe[ Varname ], 'ratio' ] )
         
         del LOOKUP
