@@ -46,8 +46,12 @@ class Outliers :
                     
                     Lower = 0
                     
-                    if Q3 > 0 :
+                    if Q3 > 0 and Q2 - Q1 >= Q3 - Q2 :
                     
+                        Upper = Q2 * 6
+                        
+                    elif Q3 > 0 and Q2 - Q1 < Q3 - Q2 :
+                        
                         Upper = Q3 * 6
                         
                     else :
