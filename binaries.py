@@ -1,6 +1,7 @@
 def binaries( reference_nparray, nparray_to_transform ) :
     
-    """ Restores integer dummy values of binary variables after scaling (e.g., after applying sklearn's StandardScaler).
+    """ ***************************************************************************************************************************
+    Restores integer dummy values of binary variables after scaling (e.g., after applying sklearn's StandardScaler).
     Otherwise, if they are very impalanced, they may have extremely high values (this is not desired for optimization algorithms). 
     Accepts the whole numpy array as input and processes only binary variables. The function can not only restore original 0 and 1
     values, but, depending on the distribution, return 0 and -1 or 1 and -1. This allows to keep the mean closer to 0 and the
