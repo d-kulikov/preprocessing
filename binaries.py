@@ -17,7 +17,7 @@ class Binaries( object ) :
     binaries = Binaries()
     binaries.fit( a )
     print( binaries.values_ )
-    transformed = binaries.predict( a ) """
+    transformed = binaries.transform( a ) """
     
     def _init_( self ) :
         self.values_ = None
@@ -50,7 +50,7 @@ class Binaries( object ) :
                     self.values_[ 1, i ] = -1
                     self.values_[ 0, i ] = 1
                     
-    def predict( self, X ) :
+    def transform( self, X ) :
         """ Applies the transformations and returns a new array
         X: numpy array to transform """
         out = np.copy( X )
