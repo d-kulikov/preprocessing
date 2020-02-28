@@ -8,58 +8,67 @@ class Outliers( object ) :
     also for very dense distributions (with high predominance of some one or several values).
     
     Example:
-    MYBOUNDS = Outliers.fit( TRAIN_DATAFRAME )
-    Outliers.transform( TEST_DATAFRAME, MYBOUNDS ) """
+    d = pd.DataFrame( { 'a' : [ -1000, -4, -3, -2, -1, 0, 1, 2, 3, 4, 1000  ],
+                        'b' : [ 0, 1, 1, 1, 1, 2, 2, 2, 3, 4, 1000 ],
+                        'c' : [ -1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1000 ],
+                        'd' : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1000 ],
+                        'e' : [ 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI' ] } )
+    outliers = Outliers()
+    outliers.fit( d )    
+    print( outliers.bounds_ )
+    transformed = outliers.transform( d ) """
     
     def _init_( self ) :
-        self.BOUNDS = None
+        self.bounds_ = None
 
     def fit( self, X ) : 
-        """ Produces a dataframe with upper and lower threshold values for censoring outliers """
-        self.BOUNDS = pd.DataFrame( index=[ 0, 1 ], columns=list( X ) )
-        for Varname in list( X ) :
+        """ Defines upper and lower threshold values for censoring outliers
+        X: input dataframe """
+        self.bounds_ = pd.DataFrame( index=[ 0, 1 ], columns=list( X ) )
+        for name in list( X ) :
             # Checks if the column is numeric            
-            if X[ Varname ].nunique() >= 3 and X[ Varname ].dtype in [ 'float64', 'float32', 'float16', 'int64', 'int32', 'int16', 'int8' ] :
-                Q1 = X[ Varname ].quantile( 0.25 )
-                Q2 = X[ Varname ].quantile( 0.50 )
-                Q3 = X[ Varname ].quantile( 0.75 )
-                # Checks if the distribution is very dense
-                if ( Q2 - Q1 ) != 0 and ( Q3 - Q2 ) != 0 :
+            if X[ name ].nunique() >= 3 and X[ name ].dtype in [ 'float64', 'float32', 'float16', 'int64', 'int32', 'int16', 'int8' ] :
+                q1 = X[ name ].quantile( 0.25 )
+                q2 = X[ name ].quantile( 0.50 )
+                q3 = X[ name ].quantile( 0.75 )
+                # Checks if the distribution is not very dense
+                if ( q2 - q1 ) != 0 and ( q3 - q2 ) != 0 :
                     # Checks if the distribution is non-symmetrical
-                    Skewed = ( Q3 - Q2 ) / ( Q2 - Q1 ) >= 1.2 or ( Q2 - Q1 ) / ( Q3 - Q2 ) >= 1.2
+                    skewed = ( q3 - q2 ) / ( q2 - q1 ) > 1.25 or ( q2 - q1 ) / ( q3 - q2 ) > 1.25
                 else:
-                    Skewed = True  
+                    skewed = True  
                 # Threshold values for a skewed distribution
-                if Skewed and X[ Varname ].min() >= 0 : 
-                    Lower = 0
-                    if Q3 > 0 and Q2 - Q1 >= Q3 - Q2 :
-                        Upper = Q2 * 6
-                    elif Q3 > 0 and Q2 - Q1 < Q3 - Q2 : 
-                        Upper = Q3 * 6   
+                if skewed and X[ name ].min() >= 0 : 
+                    lower = 0
+                    if q3 > 0 and q2 - q1 >= q3 - q2 :
+                        upper = q2 * 6
+                    elif q3 > 0 and q2 - q1 < q3 - q2 : 
+                        upper = q3 * 6   
                     else :
-                        Upper = 1
+                        upper = 1
                 # Threshold values for a symmetrical distribution
                 else :
-                    Iqr = Q3 - Q1
-                    if Iqr > 0 :
-                        Lower = Q1 - 1.5 * Iqr
-                        Upper = Q3 + 1.5 * Iqr
+                    iqr = q3 - q1
+                    if iqr > 0 :
+                        lower = q1 - 1.5 * iqr
+                        upper = q3 + 1.5 * iqr
                     else :
-                        Lower = Q1 - 1
-                        Upper = Q3 + 1
-                self.BOUNDS.loc[ 1, Varname ] = Lower
-                self.BOUNDS.loc[ 0, Varname ] = Upper
+                        lower = q1 - 1
+                        upper = q3 + 1
+                self.bounds_.loc[ 1, name ] = lower
+                self.bounds_.loc[ 0, name ] = upper
       
     def transform( self, X ) :  
-        """ Applying the threshold values to a dataframe """
+        """ Applies censoring and returns a new dataframe
+        X: dataframe to censor """
         out = X.copy()
-        for Varname in list( self.bounds_ ) :
+        for name in list( self.bounds_ ) :
             # Checks if the column is numeric
-            if self.bounds_[ Varname ].notnull().all() :
+            if self.bounds_[ name ].notnull().all() :
                 # Logical indexes for normal values
-                Condlow = np.logical_or( out[ Varname ] > self.bounds_.loc[ 1, Varname ], out[ Varname ].isnull() )
-                Condup = np.logical_or( out[ Varname ] < self.bounds_.loc[ 0, Varname ], out[ Varname ].isnull() )
-                # Replacing extreme values (where the logical conditions are false)
-                out[ Varname ].where( Condlow, self.bounds_.loc[ 1, Varname ], inplace=True )
-                out[ Varname ].where( Condup, self.bounds_.loc[ 0, Varname ], inplace=True )
+                condlow = np.logical_or( out[ name ] > self.bounds_.loc[ 1, name ], out[ name ].isnull() )
+                condup = np.logical_or( out[ name ] < self.bounds_.loc[ 0, name ], out[ name ].isnull() )
+                # Replaces extreme values (where the logical conditions are false)
+                out[ name ].where( condlow, self.bounds_.loc[ 1, name ], inplace=True )
+                out[ name ].where( condup, self.bounds_.loc[ 0, name ], inplace=True )
         return out
