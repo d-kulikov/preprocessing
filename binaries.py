@@ -19,7 +19,7 @@ class Binaries( object ) :
     print( binaries.values_ )
     transformed = binaries.transform( a ) """
     
-    def _init_( self ) :
+    def __init__( self ) :
         self.values_ = None
         self.ncols_ = 0
         
@@ -59,3 +59,4 @@ class Binaries( object ) :
             if np.isnan( self.values_[ 0, i ] ) == False :
                 out[ :, i ] = np.where( out[ :, i ] > np.mean( out[ :, i ] ), self.values_[ 0, i ], self.values_[ 1, i ] )
         return out
+    

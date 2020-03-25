@@ -18,7 +18,7 @@ class Outliers( object ) :
     print( outliers.bounds_ )
     transformed = outliers.transform( d ) """
     
-    def _init_( self ) :
+    def __init__( self ) :
         self.bounds_ = None
 
     def fit( self, X ) : 
@@ -73,3 +73,4 @@ class Outliers( object ) :
                 out[ name ].where( condlow, self.bounds_.loc[ 1, name ], inplace=True )
                 out[ name ].where( condup, self.bounds_.loc[ 0, name ], inplace=True )
         return out
+    
