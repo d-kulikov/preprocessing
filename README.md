@@ -7,6 +7,11 @@ and processed automatically. Extreme values are replaced with threshold values. 
 (normal-like) distributions but modified for skewed (non-negative) distributions where outliers are only one-sided. Works
 also for very dense distributions (with high predominance of some one or several values).
 
+## levels
+A function for transforming categorical variables (especially helpful for those with a huge number of levels, e.g. car model, city, zip ) into numeric
+ones. Each level of the variable will correspond to a certain continuous value based on the distribution of the target variable within this level.
+It works for both regression and binary classification problems.
+
 ## binaries
 A function that restores integer dummy values of binary variables after scaling (e.g., after applying sklearn's StandardScaler).
 Otherwise, if they are very impalanced, they may have extremely high values (this is not desired for optimization algorithms). 
@@ -18,9 +23,3 @@ standard deviation to 1 (as with truly numeric variables).
 A simple and efficient function for transforming a column (which is a timeseries) of a numpy array into a separate array
 where each row is a sequence of lags for a particular observation. This type of transformation is required for preparation of
 timeseries for fitting an LSTM or CNN.
-
-## many_levels
-A function for transforming categorical variables with a huge number of levels (e.g. car model, city, zip ) into numeric
-ones. Based on odds ratio within each level. Applied to binary classification problems. Missing values are treated as a
-separate level. Adds columns (with suffix "_num") to an existing dataframe which are numeric representation of those
-categorical variables.
