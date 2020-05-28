@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-class Outliers( object ) :  
+class Outliers( object ) :
     """ Functions for detection and processing outliers. The input is the whole dataset, and only numeric columns are selected
     and processed automatically. Extreme values are replaced with threshold values. Based on the 1.5-IQR rule for symmetrical 
     (normal-like) distributions but modified for skewed (non-negative) distributions where outliers are only one-sided. Works
@@ -22,7 +22,7 @@ class Outliers( object ) :
         self.bounds_ = None
 
     def fit( self, X ) : 
-        """ Defines upper and lower threshold values for censoring outliers
+        """ Defines upper and lower threshold values for winsorizing outliers
         X: input dataframe """
         self.bounds_ = pd.DataFrame( index=[ 0, 1 ], columns=list( X ) )
         for name in list( X ) :
@@ -59,8 +59,8 @@ class Outliers( object ) :
                     self.bounds_.loc[ 0, name ] = upper
       
     def transform( self, X ) :  
-        """ Applies censoring and returns a new dataframe
-        X: dataframe to censor """
+        """ Applies winsorizing and returns a new dataframe
+        X: dataframe to winsorize """
         out = X.copy()
         for name in list( self.bounds_ ) :
             # Checks if the column is numeric
