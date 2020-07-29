@@ -35,8 +35,7 @@ class Categories( object ) :
         X: input dataframe """
         self.avg_ = np.mean( X[ self.label_ ].values )
         for name in self.features_ :
-            self.vars_[ name ] = X.sample( frac=self.sample_frac_, 
-                        random_state=X[ name ].unique().shape[ 0 ] ).groupby( name )[ self.label_ ].agg( [ 'count', 'sum' ] )
+            self.vars_[ name ] = X.sample( frac=self.sample_frac_ ).groupby( name )[ self.label_ ].agg( [ 'count', 'sum' ] )
             self.vars_[ name ][ 'count' ] = self.vars_[ name ][ 'count' ] + self.dummy_number_
             self.vars_[ name ][ 'sum' ] = self.vars_[ name ][ 'sum' ] + self.dummy_number_ * self.avg_
             self.vars_[ name ][ 'value' ] = self.vars_[ name ][ 'sum' ] / self.vars_[ name ][ 'count' ]
