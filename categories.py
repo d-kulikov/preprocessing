@@ -35,7 +35,7 @@ class Categories( object ) :
         X: input dataframe """
         self.avg_ = np.mean( X[ self.label_ ].values )
         for name in self.features_ :
-            self.vars_[ name ] = X.sample( frac=self.sample_frac_ ).groupby( name )[ self.label_ ].agg( [ 'count', 'sum' ] )
+            self.vars_[ name ] = X.loc[ X[ name ].notnull() ].sample( frac=self.sample_frac_ ).groupby( name )[ self.label_ ].agg( [ 'count', 'sum' ] )
             self.vars_[ name ][ 'count' ] = self.vars_[ name ][ 'count' ] + self.dummy_number_
             self.vars_[ name ][ 'sum' ] = self.vars_[ name ][ 'sum' ] + self.dummy_number_ * self.avg_
             self.vars_[ name ][ 'value' ] = self.vars_[ name ][ 'sum' ] / self.vars_[ name ][ 'count' ]
@@ -46,5 +46,7 @@ class Categories( object ) :
         X: dataframe to transform """
         out = X.copy()
         for name in self.features_ :
-            out[ name ] = np.where( out[ name ].isin( self.vars_[ name ].index ), self.vars_[ name ][ 'value' ][ out[ name ] ], np.nan )
+            notna = out[ name ].notnull().values
+            out.loc[ notna, name ] = self.vars_[ name ][ 'value' ][ out.loc[ notna, name ] ].values
+            out[ name ] = pd.to_numeric( out[ name ] )
         return out
