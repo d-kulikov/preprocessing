@@ -40,10 +40,8 @@ class Outliers( object ) :
                     # Threshold values for a skewed distribution
                     if skewed and np.min( v ) >= 0 : 
                         lower = 0
-                        if q3 > 0 and q2 - q1 >= q3 - q2 :
-                            upper = q2 * 6
-                        elif q3 > 0 and q2 - q1 < q3 - q2 : 
-                            upper = q3 * 6   
+                        if q3 > 0 :
+                            upper = q3 * 2   
                         else :
                             upper = 1
                     # Threshold values for a symmetrical distribution
