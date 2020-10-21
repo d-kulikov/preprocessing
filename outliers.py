@@ -30,7 +30,7 @@ class Outliers( object ) :
             if X[ name ].dtype in [ 'float64', 'float32', 'float16', 'int64', 'int32', 'int16', 'int8' ] :
                 v = np.float32( X[ name ] )
                 if np.unique( v[ ~np.isnan( v ) ] ).shape[ 0 ] >= 3 :
-                    q1, q2, q3 = np.percentile( v, [ 25, 50, 75 ] )
+                    q1, q2, q3 = np.nanpercentile( v, [ 25, 50, 75 ] )
                     # Checks if the distribution is not very dense
                     if ( q2 - q1 ) != 0 and ( q3 - q2 ) != 0 :
                         # Checks if the distribution is non-symmetrical
