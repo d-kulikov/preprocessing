@@ -38,7 +38,7 @@ class Outliers( object ) :
                     else:
                         skewed = True  
                     # Threshold values for a skewed distribution
-                    if skewed and np.min( v ) >= 0 : 
+                    if skewed and np.nanmin( v ) >= 0 : 
                         lower = 0
                         if q3 > 0 :
                             upper = q3 * 2   
