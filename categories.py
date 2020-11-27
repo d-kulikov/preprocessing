@@ -21,10 +21,9 @@ class Categories( object ) :
     print( categories.vars_[ 'a' ] )
     transformed = categories.transform( d ) """
     
-    def __init__( self, features, label, sample_frac=0.8, dummy_number=30 ) :
+    def __init__( self, features, label, dummy_number=30 ) :
         self.features_ = features
         self.label_ = label
-        self.sample_frac_ = sample_frac
         self.dummy_number_ = dummy_number
         self.vars_ = {}
         self.avg_ = np.nan
@@ -35,7 +34,7 @@ class Categories( object ) :
         X: input dataframe """
         self.avg_ = np.mean( X[ self.label_ ].values )
         for name in self.features_ :
-            self.vars_[ name ] = X.loc[ X[ name ].notnull() ].sample( frac=self.sample_frac_ ).groupby( name )[ self.label_ ].agg( [ 'count', 'sum' ] )
+            self.vars_[ name ] = X.loc[ X[ name ].notnull() ].groupby( name )[ self.label_ ].agg( [ 'count', 'sum' ] )
             self.vars_[ name ][ 'count' ] = self.vars_[ name ][ 'count' ] + self.dummy_number_
             self.vars_[ name ][ 'sum' ] = self.vars_[ name ][ 'sum' ] + self.dummy_number_ * self.avg_
             self.vars_[ name ][ 'value' ] = self.vars_[ name ][ 'sum' ] / self.vars_[ name ][ 'count' ]
@@ -48,5 +47,6 @@ class Categories( object ) :
         for name in self.features_ :
             notna = out[ name ].notnull().values
             out.loc[ notna, name ] = self.vars_[ name ][ 'value' ][ out.loc[ notna, name ] ].values
+            out.loc[ out[ name ].isnull(), name ] = self.avg_
             out[ name ] = pd.to_numeric( out[ name ] )
         return out
