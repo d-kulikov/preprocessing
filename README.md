@@ -7,7 +7,7 @@ and processed automatically. Extreme values are replaced with threshold values. 
 (normal-like) distributions but modified for skewed (non-negative) distributions where outliers are only one-sided. Works
 also for very dense distributions (with high predominance of some one or several values).
 
-## levels
+## categories
 A function for transforming categorical variables (especially helpful for those with a huge number of levels, e.g. car model, city, zip ) into numeric
 ones. Each level of the variable will correspond to a certain continuous value based on the distribution of the target variable within this level.
 It works for both regression and binary classification problems.
