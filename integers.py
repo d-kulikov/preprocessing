@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-class Categories( object ) :
+class Integers( object ) :
     
     """ A function for transforming categorical variables (especially helpful for those with a huge number of categories, e.g. car model, city, zip ) into numeric
     ones. Each level of the variable will correspond to a certain continuous value based on the distribution of the target variable within this level.
@@ -21,23 +21,19 @@ class Categories( object ) :
     print( categories.vars_[ 'a' ] )
     transformed = categories.transform( d ) """
     
-    def __init__( self, features, label, dummy_number=30 ) :
+    def __init__( self, features, timestamp ) :
         self.features_ = features
-        self.label_ = label
-        self.dummy_number_ = dummy_number
+        self.timestamp_ = timestamp
         self.vars_ = {}
-        self.avg_ = np.nan
         
     def fit( self, X ) :
         """ Defines numeric values for replacing categorical values. This should be applied to the train sample only. Otherwise, 
         this is a pure overfit.
         X: input dataframe """
-        self.avg_ = np.mean( X[ self.label_ ].values )
+        X[ self.timestamp_ ] = pd.to_numeric( X[ self.timestamp_ ] )
         for name in self.features_ :
-            self.vars_[ name ] = X.groupby( name )[ self.label_ ].agg( [ 'count', 'sum' ] )
-            self.vars_[ name ][ 'count' ] = self.vars_[ name ][ 'count' ] + self.dummy_number_
-            self.vars_[ name ][ 'sum' ] = self.vars_[ name ][ 'sum' ] + self.dummy_number_ * self.avg_
-            self.vars_[ name ][ 'value' ] = self.vars_[ name ][ 'sum' ] / self.vars_[ name ][ 'count' ]
+            self.vars_[ name ] = X.groupby( name ).agg( number = ( name, 'count' ), recency = ( self.timestamp_, 'mean' ) ).sort_values( by=[ 'number', 'recency' ], ascending=[ True, False ] )
+            self.vars_[ name ][ name+'_integer' ] = range( self.vars_[ name ].shape[ 0 ] )
             
     def transform( self, X ) :  
         """ Applies replacement of categorical variables with numeric ones and returns a new dataframe. A small portion of missing values may appear if
@@ -45,5 +41,6 @@ class Categories( object ) :
         X: dataframe to transform """
         out = X.copy()
         for name in self.features_ :
-            out[ name+'_numeric' ] = self.vars_[ name ][ 'value' ][ out[ name ] ].values
+            out = out.merge( self.vars_[ name ][ name+'_integer' ], on=name, how='left' )
+            out[ name+'_integer' ] = np.int32( np.where( out[ name+'_integer' ].isnull(), 0, out[ name+'_integer' ] ) )
         return out
